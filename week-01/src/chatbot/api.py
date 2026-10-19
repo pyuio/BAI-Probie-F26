@@ -38,7 +38,9 @@ from src.chatbot.models import ChatMessage
 #   client = create_client()
 #
 # Your code here:
-# def create_client() -> ...:
+def create_client() -> OpenAI:
+    client = OpenAI(api_key=settings.OPENAI_API_KEY)
+    return client
 
 
 # TODO: Implement get_chat_response function
@@ -70,13 +72,13 @@ from src.chatbot.models import ChatMessage
 #     try:
 #         # Convert messages to dicts
 #         message_dicts = [msg.model_dump() for msg in messages]
-#         
+#
 #         # Call OpenAI API
 #         response = client.chat.completions.create(...)
-#         
+#
 #         # Extract the assistant's message
 #         assistant_message = response.choices[0].message
-#         
+#
 #         # Create and return ChatMessage
 #         return ChatMessage(
 #             role=assistant_message.role,
@@ -89,6 +91,28 @@ from src.chatbot.models import ChatMessage
 #         raise
 #
 # Your code here:
+def get_chat_response(
+    client: OpenAI, messages: List[ChatMessage], model: str
+) -> ChatMessage:
+    try:
+        # Convert messages into dictionaries
+        message_dicts = [msg.model_dump() for msg in messages]
+
+        # Send messages to OpenAI
+        response = client.chat.completions.create(model=model, messages=message_dicts)
+
+        # Extract the assistant's response
+        assistant_message = response.choices[0].message
+
+        if assistant_message.content is None:
+            raise ValueError("The AI returned no text.")
+
+        # Return the response as a ChatMessage
+        return ChatMessage(role="assistant", content=assistant_message.content)
+
+    except Exception as e:
+        print(f"Error communicating with OpenAI: {e}")
+        raise
 
 
 # TODO: Implement create_system_message function (Helper Function)
@@ -105,4 +129,5 @@ from src.chatbot.models import ChatMessage
 #   system_msg = create_system_message()
 #
 # Your code here:
-
+def create_system_message() -> ChatMessage:
+    return ChatMessage(role="system", content=SYSTEM_PROMPT)
