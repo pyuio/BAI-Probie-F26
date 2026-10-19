@@ -24,36 +24,11 @@ from src.settings import settings
 
 
 def should_quit(user_input: str) -> bool:
-    """
-    Check if the user wants to quit the conversation.
-
-    Args:
-        user_input: The user's message
-
-    Returns:
-        True if the user wants to quit, False otherwise
-
-    This is a pure function - same input always gives same output.
-    We check for common quit commands (case-insensitive).
-    """
     quit_commands = {"quit", "exit", "bye", "goodbye"}
     return user_input.lower() in quit_commands
 
 
 def run_conversation_loop() -> None:
-    """
-    Main conversation loop - the heart of the chatbot!
-
-    This function:
-    1. Sets up the OpenAI client
-    2. Displays the welcome message
-    3. Runs the conversation loop until the user quits
-    4. Handles errors gracefully
-
-    The conversation history is stored as a list of ChatMessage objects.
-    We start with a system message to set the chatbot's personality.
-    """
-
     # TODO: Create OpenAI client
     client = create_client()
 
@@ -112,12 +87,6 @@ def run_conversation_loop() -> None:
 
 
 def main() -> None:
-    """
-    Entry point for the chatbot application.
-
-    This function is called when you run: python -m src.chatbot.main
-    It wraps the conversation loop with top-level error handling.
-    """
     try:
         run_conversation_loop()
     except KeyboardInterrupt:
