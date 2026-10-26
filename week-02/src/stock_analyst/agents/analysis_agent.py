@@ -21,7 +21,9 @@ from src.stock_analyst.tools.stock_tools import (
     find_support_resistance,
     calculate_price_volatility,
     get_price_change_percent,
+    calculate_rsi,
 )
+
 from src.stock_analyst.constants import ANALYSIS_AGENT_PROMPT
 from src.stock_analyst.llm import llm
 from src.utils.debug import debug_log
@@ -184,6 +186,36 @@ def get_current_vs_ma_position(ctx: RunContext[StockData]) -> dict[str, str]:
     return result
 
 
+@analysis_agent.tool
+def get_rsi(ctx: RunContext[StockData]) -> dict:
+    """
+    Calculate the 14-day Relative Strength Index (RSI).
+
+    RSI measures momentum on a scale of 0 to 100.
+    Above 70 = potentially overbought.
+    Below 30 = potentially oversold.
+    """
+
+    stock_data = ctx.deps
+
+    debug_log('[agent: "analysis_agent"] [tool-call: "get_rsi"]')
+
+    rsi = calculate_rsi(stock_data.price_history, 14)
+
+    if rsi is None:
+        signal = "insufficient data"
+    elif rsi > 70:
+        signal = "overbought"
+    elif rsi < 30:
+        signal = "oversold"
+    else:
+        signal = "neutral"
+
+    return {
+        "rsi": rsi,
+        "signal": signal,
+    }
+
 async def analyze_stock(stock_data: StockData) -> TechnicalAnalysis:
     """
     Analyze stock data and produce a technical analysis report.
@@ -211,8 +243,10 @@ async def analyze_stock(stock_data: StockData) -> TechnicalAnalysis:
     result = await analysis_agent.run(
         f"Perform technical analysis on {stock_data.symbol}. "
         f"Use the available tools to calculate moving averages, support/resistance, "
-        f"volatility, and price trends. Then provide a structured analysis with "
-        f"trend direction, trend strength, key levels, and a summary.",
+        f"volatility, price trends, and the 14-day RSI using get_rsi. "
+        f"Call get_rsi and include its numeric value and signal in the analysis summary. "
+        f"Then provide a structured analysis with trend direction, "
+        f"trend strength, key levels, and a summary.",
         deps=stock_data,
     )
 
